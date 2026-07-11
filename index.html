@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Personal Encrypted Vault</title>
+    <style>
+        :root {
+            /* Palet Warna Premium */
+            --bg-color: #0F172A;
+            --surface-color: #1E293B;
+            --surface-hover: #334155;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent-color: #0B6EFD;
+            --accent-hover: #0855C4;
+            --error-color: #EF4444;
+            --error-hover: #DC2626;
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', 'Montserrat', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Container Settings */
+        .container {
+            width: 90%;
+            max-width: 420px;
+            padding: 2.5rem 2rem;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            width: 95%;
+            min-height: 95vh;
+            display: flex; 
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            padding: 1.5rem;
+            margin-top: 2vh;
+            margin-bottom: 2vh;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            border: 1px solid var(--surface-hover);
+            background-color: rgba(15, 23, 42, 0.5);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(11, 110, 253, 0.2);
+            background-color: var(--bg-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-text {
+            background-color: transparent !important;
+            color: var(--error-color) !important;
+            font-size: 0.85rem !important;
+            margin-top: 1rem !important;
+            box-shadow: none !important;
+        }
+
+        .btn-text:hover {
+            text-decoration: underline;
+            transform: none !important;
+        }
+
+        .btn-danger {
+            background-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--error-hover) !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        /* Dashboard & Gallery Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--surface-hover);
+            margin-bottom: 2rem;
+        }
+        
+        .header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            text-align: left;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--surface-color);
+            padding: 1.5rem 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid var(--surface-hover);
+        }
+
+        .stat-card h3 {
+            font-size: 2.2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-card label {
+            margin: 0;
+            font-size: 0.8rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--surface-hover);
+            border-radius: var(--border-radius);
+            padding: 2.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 2rem;
+            background-color: rgba(30, 41, 59, 0.3);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(11, 110, 253, 0.05);
+        }
+
+        .upload-area h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-area p {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .gallery-item {
+            width: 100%;
+            aspect-ratio: 1;
+            background-color: var(--surface-hover);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer; 
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* MEDIA VIEWER (LIGHTBOX) */
+        #media-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+        }
+
+        .modal-title {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40%;
+        }
+
+        .modal-controls {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .modal-controls button {
+            margin: 0;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            width: auto;
+        }
+
+        #btn-close-modal {
+            background-color: transparent;
+            border: 1px solid var(--text-secondary);
+        }
+        
+        #btn-close-modal:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        #media-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        #media-content img, 
+        #media-content video {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 1rem;
+                width: 100%;
+                margin: 0;
+                min-height: 100vh;
+                border-radius: 0;
+            }
+            .header h2 {
+                font-size: 1.2rem;
+            }
+            button {
+                font-size: 0.95rem;
+                padding: 0.8rem;
+            }
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            }
+            .modal-header {
+                padding: 1rem;
+            }
+            .modal-title {
+                display: none; 
+            }
+            .modal-controls button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Setup Wizard View -->
+    <div class="container" id="setup-view">
+        <h2>Konfigurasi Brankas</h2>
+        <p>Buat Master Password untuk mengenkripsi brankas. Data diproses secara lokal tanpa server.</p>
+        <div class="form-group">
+            <label>Master Password</label>
+            <input type="password" id="setup-pwd" placeholder="Minimal 8 karakter">
+        </div>
+        <div class="form-group">
+            <label>Konfirmasi Password</label>
+            <input type="password" id="setup-pwd-confirm" placeholder="Ketik ulang password">
+        </div>
+        <div class="error-msg" id="setup-error"></div>
+        <button onclick="initializeVault()">Buat Brankas Terenkripsi</button>
+    </div>
+
+    <!-- Login View -->
+    <div class="container hidden" id="login-view">
+        <h2>Brankas Terkunci</h2>
+        <p>Masukkan Master Password untuk mendekripsi dan membuka data Anda.</p>
+        <div class="form-group">
+            <input type="password" id="login-pwd" placeholder="Master Password">
+        </div>
+        <div class="error-msg" id="login-error"></div>
+        <button onclick="unlockVault()">Buka Kunci</button>
+        <!-- TOMBOL BARU: RESET VAULT -->
+        <button class="btn-text" onclick="resetTotalVault()">Lupa Password? Hapus Semua Data</button>
+    </div>
+
+    <!-- Dashboard View -->
+    <div class="container dashboard-container hidden" id="dashboard-view">
+        <div class="header">
+            <h2>Vault Dashboard</h2>
+            <button style="width: auto; padding: 0.5rem 1.2rem; margin-top: 0; font-size: 0.85rem; background-color: var(--surface-hover);" onclick="lockVault()">Kunci</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="stat-photos">0</h3>
+                <label>Foto Terenkripsi</label>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-videos">0</h3>
+                <label>Video Terenkripsi</label>
+            </div>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+            <h3>Ketuk untuk Unggah File</h3>
+            <p>Mendukung gambar & video. File akan otomatis dienkripsi dengan AES-256-GCM.</p>
+            <input type="file" id="file-input" class="hidden" multiple accept="image/*,video/*" onchange="handleFileUpload(event)">
+        </div>
+
+        <h3 style="text-align: left; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary);">Koleksi Anda</h3>
+        <div class="gallery" id="gallery-container">
+            <!-- Decrypted files will render here -->
+        </div>
+    </div>
+
+    <!-- MEDIA VIEWER (LIGHTBOX) -->
+    <div id="media-modal" class="hidden">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">Nama File</div>
+            <div class="modal-controls">
+                <!-- TOMBOL BARU: HAPUS FILE -->
+                <button id="btn-delete" class="btn-danger" onclick="deleteCurrentMedia()">Hapus</button>
+                <button id="btn-download" onclick="downloadCurrentMedia()">Unduh</button>
+                <button id="btn-close-modal" onclick="closeMediaViewer()">Tutup</button>
+            </div>
+        </div>
+        <div id="media-content">
+            <!-- Image atau Video akan disisipkan di sini via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // === Core Variables & IndexedDB Setup ===
+        const DB_NAME = 'CryptoVaultDB_V2';
+        const DB_VERSION = 1;
+        let db;
+        let sessionKey = null; 
+        
+        // Variabel untuk menyimpan sesi media viewer
+        let currentMediaUrl = null;
+        let currentMediaName = null;
+        let currentFileId = null; // Menyimpan ID file untuk dihapus
+
+        // Variabel untuk Auto-Lock
+        let inactivityTimer = null;
+        const AUTO_LOCK_MS = 3 * 60 * 1000; // 3 Menit
+
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains('config')) {
+                db.createObjectStore('config', { keyPath: 'key' });
+            }
+            if (!db.objectStoreNames.contains('files')) {
+                db.createObjectStore('files', { keyPath: 'id' });
+            }
+        };
+
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            checkSetupStatus();
+        };
+
+        request.onerror = (e) => {
+            console.error("Database error: ", e.target.errorCode);
+            alert("Browser Anda tidak mendukung IndexedDB atau sedang dalam Private Mode yang ketat.");
+        };
+
+        function switchView(viewId) {
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function checkSetupStatus() {
+            const tx = db.transaction('config', 'readonly');
+            const store = tx.objectStore('config');
+            const req = store.get('vault_auth');
+
+            req.onsuccess = () => {
+                if (req.result) {
+                    switchView('login-view');
+                } else {
+                    switchView('setup-view');
+                }
+            };
+        }
+
+        // === FITUR BARU: Auto Lock (Reset Timer saat ada aktivitas) ===
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            if (sessionKey) { // Hanya berjalan jika sedang login
+                inactivityTimer = setTimeout(() => {
+                    lockVault();
+                    alert("Demi keamanan, brankas otomatis dikunci karena tidak ada aktivitas selama 3 menit.");
+                }, AUTO_LOCK_MS);
+            }
+        }
+        
+        // Pantau aktivitas layar
+        window.addEventListener('mousemove', resetInactivityTimer);
+        window.addEventListener('keypress', resetInactivityTimer);
+        window.addEventListener('touchstart', resetInactivityTimer);
+
+        // === Cryptography Core (Web Crypto API) ===
+        function generateSalt() {
+            return window.crypto.getRandomValues(new Uint8Array(16));
+        }
+
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                { name: "PBKDF2" },
+                false,
+                ["deriveBits", "deriveKey"]
+            );
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function initializeVault() {
+            const pwd = document.getElementById('setup-pwd').value;
+            const confirm = document.getElementById('setup-pwd-confirm').value;
+            const errorEl = document.getElementById('setup-error');
+
+            if (pwd.length < 8) return errorEl.innerText = "Password minimal 8 karakter.";
+            if (pwd !== confirm) return errorEl.innerText = "Password tidak cocok.";
+
+            errorEl.style.color = "var(--text-primary)";
+            errorEl.innerText = "Membuat kunci kriptografi...";
+            
+            try {
+                const salt = generateSalt();
+                const validationBuffer = new TextEncoder().encode("VAULT_VALID");
+                
+                const key = await deriveKey(pwd, salt);
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encryptedValidation = await window.crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    validationBuffer
+                );
+
+                const tx = db.transaction('config', 'readwrite');
+                const store = tx.objectStore('config');
+                store.put({
+                    key: 'vault_auth',
+                    salt: salt,
+                    iv: iv,
+                    validation: encryptedValidation
+                });
+
+                tx.oncomplete = () => {
+                    document.getElementById('setup-pwd').value = '';
+                    document.getElementById('setup-pwd-confirm').value = '';
+                    errorEl.innerText = "";
+                    errorEl.style.color = "var(--error-color)";
+                    switchView('login-view');
+                };
+            } catch (err) {
+                errorEl.style.color = "var(--error-color)";
+                errorEl.innerText = "Terjadi kesalahan saat enkripsi.";
+                console.error(err);
+            }
+        }
+
+        async function unlockVault() {
+            const pwd = document.getElementById('login-pwd').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.innerText = "";
+
+            if(!pwd) return errorEl.innerText = "Password tidak boleh kosong.";
+
+            const tx = db.transaction('config', 'readonly');
+            const store = tx.objectStore('config');
+            const req = store.get('vault_auth');
+
+            req.onsuccess = async () => {
+                const authData = req.result;
+                if(!authData) return errorEl.innerText = "Data vault tidak ditemukan.";
+
+                try {
+                    errorEl.style.color = "var(--text-primary)";
+                    errorEl.innerText = "Membuka brankas...";
+
+                    const key = await deriveKey(pwd, authData.salt);
+                    const decryptedBuffer = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: authData.iv },
+                        key,
+                        authData.validation
+                    );
+                    
+                    const decString = new TextDecoder().decode(decryptedBuffer);
+                    if (decString === "VAULT_VALID") {
+                        sessionKey = key; 
+                        document.getElementById('login-pwd').value = '';
+                        errorEl.innerText = "";
+                        errorEl.style.color = "var(--error-color)";
+                        resetInactivityTimer(); // Mulai timer
+                        switchView('dashboard-view');
+                        loadGallery(); 
+                    }
+                } catch (e) {
+                    errorEl.style.color = "var(--error-color)";
+                    errorEl.innerText = "Password salah atau data korup.";
+                }
+            };
+        }
+
+        function lockVault() {
+            sessionKey = null; 
+            clearTimeout(inactivityTimer);
+            document.getElementById('gallery-container').innerHTML = ''; 
+            closeMediaViewer(); // Pastikan viewer tertutup saat dikunci
+            switchView('login-view');
+        }
+
+        // === FITUR BARU: Reset Total Vault ===
+        function resetTotalVault() {
+            if(confirm("PERINGATAN KRITIS!\n\nApakah Anda yakin ingin menghapus SELURUH FOTO, VIDEO, dan PASSWORD? Data akan musnah dan tidak dapat dipulihkan kembali.\n\nKlik OK untuk menghapus selamanya.")) {
+                const deleteReq = indexedDB.deleteDatabase(DB_NAME);
+                deleteReq.onsuccess = () => {
+                    alert("Seluruh data telah dihapus secara permanen. Halaman akan dimuat ulang.");
+                    window.location.reload();
+                };
+                deleteReq.onerror = () => {
+                    alert("Gagal mereset database. Coba bersihkan cache browser Anda.");
+                }
+            }
+        }
+
+        // === File Operations ===
+        async function handleFileUpload(event) {
+            if (!sessionKey) return alert("Sesi tidak valid. Harap login kembali.");
+            const files = event.target.files;
+            
+            const uploadTitle = document.querySelector('.upload-area h3');
+            const originalText = uploadTitle.innerText;
+            uploadTitle.innerText = "Mengenkripsi file...";
+
+            for (let file of files) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                    
+                    const encryptedContent = await window.crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv: iv },
+                        sessionKey,
+                        arrayBuffer
+                    );
+
+                    const fileRecord = {
+                        id: crypto.randomUUID(),
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        timestamp: Date.now(),
+                        iv: iv,
+                        data: encryptedContent
+                    };
+
+                    const tx = db.transaction('files', 'readwrite');
+                    tx.objectStore('files').put(fileRecord);
+                    
+                    await new Promise((resolve) => {
+                        tx.oncomplete = () => resolve();
+                    });
+                } catch (err) {
+                    console.error("Gagal memproses file:", file.name, err);
+                }
+            }
+            
+            uploadTitle.innerText = originalText;
+            document.getElementById('file-input').value = ""; 
+            loadGallery();
+        }
+
+        async function loadGallery() {
+            if (!sessionKey) return;
+            const gallery = document.getElementById('gallery-container');
+            gallery.innerHTML = ''; 
+            
+            let photoCount = 0;
+            let videoCount = 0;
+
+            const tx = db.transaction('files', 'readonly');
+            const request = tx.objectStore('files').getAll();
+
+            request.onsuccess = async () => {
+                const files = request.result;
+                
+                // Urutkan dari yang terbaru
+                files.sort((a, b) => b.timestamp - a.timestamp);
+
+                for (let file of files) {
+                    if (file.type.startsWith('image')) photoCount++;
+                    if (file.type.startsWith('video')) videoCount++;
+
+                    try {
+                        const decryptedBuffer = await window.crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: file.iv },
+                            sessionKey,
+                            file.data
+                        );
+
+                        const blob = new Blob([decryptedBuffer], { type: file.type });
+                        const url = URL.createObjectURL(blob);
+
+                        const div = document.createElement('div');
+                        div.className = 'gallery-item';
+                        
+                        div.onclick = () => openMediaViewer(file.id);
+                        
+                        if (file.type.startsWith('image')) {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.onload = () => URL.revokeObjectURL(url); 
+                            div.appendChild(img);
+                        } else if (file.type.startsWith('video')) {
+                            const videoIcon = document.createElement('div');
+                            videoIcon.style.color = "var(--text-secondary)";
+                            videoIcon.style.fontSize = "0.85rem";
+                            videoIcon.style.textAlign = "center";
+                            videoIcon.style.padding = "0.5rem";
+                            videoIcon.innerText = "▶️\nVideo";
+                            div.appendChild(videoIcon);
+                        }
+                        
+                        gallery.appendChild(div);
+                    } catch (e) {
+                        console.error("Gagal mendekripsi file:", file.name);
+                    }
+                }
+
+                document.getElementById('stat-photos').innerText = photoCount;
+                document.getElementById('stat-videos').innerText = videoCount;
+            };
+        }
+        
+        async function openMediaViewer(fileId) {
+            if (!sessionKey) return;
+
+            const tx = db.transaction('files', 'readonly');
+            const req = tx.objectStore('files').get(fileId);
+
+            req.onsuccess = async () => {
+                const file = req.result;
+                if (!file) return;
+
+                try {
+                    const decryptedBuffer = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: file.iv },
+                        sessionKey,
+                        file.data
+                    );
+                    
+                    const blob = new Blob([decryptedBuffer], { type: file.type });
+                    
+                    if (currentMediaUrl) URL.revokeObjectURL(currentMediaUrl);
+                    
+                    currentMediaUrl = URL.createObjectURL(blob);
+                    currentMediaName = file.name;
+                    currentFileId = file.id; // Simpan ID untuk fungsi Hapus
+
+                    document.getElementById('modal-title').innerText = file.name;
+                    const container = document.getElementById('media-content');
+                    container.innerHTML = ''; 
+
+                    if (file.type.startsWith('image')) {
+                        const img = document.createElement('img');
+                        img.src = currentMediaUrl;
+                        container.appendChild(img);
+                    } else if (file.type.startsWith('video')) {
+                        const video = document.createElement('video');
+                        video.src = currentMediaUrl;
+                        video.controls = true;
+                        video.autoplay = true;
+                        container.appendChild(video);
+                    }
+
+                    document.getElementById('media-modal').classList.remove('hidden');
+                    resetInactivityTimer(); // Reset timer saat buka media
+
+                } catch (e) {
+                    alert("Gagal mendekripsi atau membuka media.");
+                    console.error(e);
+                }
+            };
+        }
+
+        function closeMediaViewer() {
+            document.getElementById('media-modal').classList.add('hidden');
+            const container = document.getElementById('media-content');
+            container.innerHTML = ''; 
+
+            if (currentMediaUrl) {
+                URL.revokeObjectURL(currentMediaUrl);
+                currentMediaUrl = null;
+                currentMediaName = null;
+                currentFileId = null;
+            }
+        }
+
+        function downloadCurrentMedia() {
+            if (!currentMediaUrl || !currentMediaName) return;
+            
+            const a = document.createElement('a');
+            a.href = currentMediaUrl;
+            a.download = currentMediaName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            resetInactivityTimer();
+        }
+
+        // === FITUR BARU: Hapus File ===
+        function deleteCurrentMedia() {
+            if(!currentFileId) return;
+
+            if(confirm("Apakah Anda yakin ingin menghapus file ini? Tindakan ini tidak dapat dibatalkan.")) {
+                const tx = db.transaction('files', 'readwrite');
+                tx.objectStore('files').delete(currentFileId);
+
+                tx.oncomplete = () => {
+                    closeMediaViewer();
+                    loadGallery();
+                };
+            }
+        }
+    </script>
+</body>
+</html>
