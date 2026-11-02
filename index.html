@@ -135,7 +135,7 @@
 
         .btn-text {
             background-color: transparent !important;
-            color: var(--error-color) !important;
+            color: var(--accent-color) !important;
             font-size: 0.85rem !important;
             margin-top: 1rem !important;
             box-shadow: none !important;
@@ -183,6 +183,11 @@
             margin: 0;
             font-size: 1.5rem;
             text-align: left;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .stats-grid {
@@ -267,8 +272,8 @@
             transform: scale(1.05);
         }
 
-        /* MEDIA VIEWER (LIGHTBOX) */
-        #media-modal {
+        /* MEDIA VIEWER & MODAL */
+        #media-modal, #change-pwd-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -279,16 +284,29 @@
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            opacity: 1;
-            transition: opacity 0.3s ease;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--surface-hover);
         }
 
         .modal-header {
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 1.5rem;
             background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .modal-title {
@@ -329,6 +347,8 @@
             align-items: center;
             padding: 1rem;
             overflow: hidden;
+            width: 100%;
+            margin-top: 3rem;
         }
 
         #media-content img, 
@@ -376,9 +396,9 @@
     <!-- Setup Wizard View -->
     <div class="container" id="setup-view">
         <h2>Konfigurasi Brankas</h2>
-        <p>Buat Master Password untuk mengenkripsi brankas. Data diproses secara lokal tanpa server.</p>
+        <p>Buat Master Password baru untuk mengamankan brankas Anda.</p>
         <div class="form-group">
-            <label>Master Password</label>
+            <label>Master Password Baru</label>
             <input type="password" id="setup-pwd" placeholder="Minimal 8 karakter">
         </div>
         <div class="form-group">
@@ -386,7 +406,7 @@
             <input type="password" id="setup-pwd-confirm" placeholder="Ketik ulang password">
         </div>
         <div class="error-msg" id="setup-error"></div>
-        <button onclick="initializeVault()">Buat Brankas Terenkripsi</button>
+        <button onclick="initializeVault()">Simpan Master Password</button>
     </div>
 
     <!-- Login View -->
@@ -398,15 +418,18 @@
         </div>
         <div class="error-msg" id="login-error"></div>
         <button onclick="unlockVault()">Buka Kunci</button>
-        <!-- TOMBOL BARU: RESET VAULT -->
-        <button class="btn-text" onclick="resetTotalVault()">Lupa Password? Hapus Semua Data</button>
+        <!-- FUNGSI DIUBAH: RESET PASSWORD TANPA HAPUS DATA -->
+        <button class="btn-text" onclick="resetPasswordOnly()">Lupa Password? Buat Password Baru (File Aman)</button>
     </div>
 
     <!-- Dashboard View -->
     <div class="container dashboard-container hidden" id="dashboard-view">
         <div class="header">
             <h2>Vault Dashboard</h2>
-            <button style="width: auto; padding: 0.5rem 1.2rem; margin-top: 0; font-size: 0.85rem; background-color: var(--surface-hover);" onclick="lockVault()">Kunci</button>
+            <div class="header-actions">
+                <button style="width: auto; padding: 0.5rem 1rem; margin-top: 0; font-size: 0.85rem; background-color: var(--surface-hover);" onclick="openChangePwdModal()">Ubah Password</button>
+                <button style="width: auto; padding: 0.5rem 1rem; margin-top: 0; font-size: 0.85rem; background-color: var(--error-color);" onclick="lockVault()">Kunci</button>
+            </div>
         </div>
         
         <div class="stats-grid">
@@ -437,14 +460,33 @@
         <div class="modal-header">
             <div class="modal-title" id="modal-title">Nama File</div>
             <div class="modal-controls">
-                <!-- TOMBOL BARU: HAPUS FILE -->
                 <button id="btn-delete" class="btn-danger" onclick="deleteCurrentMedia()">Hapus</button>
                 <button id="btn-download" onclick="downloadCurrentMedia()">Unduh</button>
                 <button id="btn-close-modal" onclick="closeMediaViewer()">Tutup</button>
             </div>
         </div>
         <div id="media-content">
-            <!-- Image atau Video akan disisipkan di sini via JavaScript -->
+            <!-- Image atau Video disisipkan via JS -->
+        </div>
+    </div>
+
+    <!-- MODAL UBAH PASSWORD -->
+    <div id="change-pwd-modal" class="hidden">
+        <div class="modal-box">
+            <h2>Ubah Master Password</h2>
+            <p>Masukkan password baru untuk mengganti kredensial akses Anda.</p>
+            <div class="form-group">
+                <label>Password Baru</label>
+                <input type="password" id="new-pwd" placeholder="Minimal 8 karakter">
+            </div>
+            <div class="form-group">
+                <label>Konfirmasi Password Baru</label>
+
+                <input type="password" id="new-pwd-confirm" placeholder="Ketik ulang password baru">
+            </div>
+            <div class="error-msg" id="change-pwd-error"></div>
+            <button onclick="saveNewPasswordFromDashboard()">Simpan Password Baru</button>
+            <button class="btn-text" style="color: var(--text-secondary) !important;" onclick="closeChangePwdModal()">Batal</button>
         </div>
     </div>
 
@@ -455,14 +497,12 @@
         let db;
         let sessionKey = null; 
         
-        // Variabel untuk menyimpan sesi media viewer
         let currentMediaUrl = null;
         let currentMediaName = null;
-        let currentFileId = null; // Menyimpan ID file untuk dihapus
+        let currentFileId = null;
 
-        // Variabel untuk Auto-Lock
         let inactivityTimer = null;
-        const AUTO_LOCK_MS = 3 * 60 * 1000; // 3 Menit
+        const AUTO_LOCK_MS = 3 * 60 * 1000;
 
         const request = indexedDB.open(DB_NAME, DB_VERSION);
         
@@ -483,7 +523,7 @@
 
         request.onerror = (e) => {
             console.error("Database error: ", e.target.errorCode);
-            alert("Browser Anda tidak mendukung IndexedDB atau sedang dalam Private Mode yang ketat.");
+            alert("Browser Anda tidak mendukung IndexedDB atau dalam mode Private.");
         };
 
         function switchView(viewId) {
@@ -507,23 +547,21 @@
             };
         }
 
-        // === FITUR BARU: Auto Lock (Reset Timer saat ada aktivitas) ===
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
-            if (sessionKey) { // Hanya berjalan jika sedang login
+            if (sessionKey) {
                 inactivityTimer = setTimeout(() => {
                     lockVault();
-                    alert("Demi keamanan, brankas otomatis dikunci karena tidak ada aktivitas selama 3 menit.");
+                    alert("Demi keamanan, brankas otomatis dikunci.");
                 }, AUTO_LOCK_MS);
             }
         }
         
-        // Pantau aktivitas layar
         window.addEventListener('mousemove', resetInactivityTimer);
         window.addEventListener('keypress', resetInactivityTimer);
         window.addEventListener('touchstart', resetInactivityTimer);
 
-        // === Cryptography Core (Web Crypto API) ===
+        // === Cryptography Core ===
         function generateSalt() {
             return window.crypto.getRandomValues(new Uint8Array(16));
         }
@@ -560,7 +598,7 @@
             if (pwd !== confirm) return errorEl.innerText = "Password tidak cocok.";
 
             errorEl.style.color = "var(--text-primary)";
-            errorEl.innerText = "Membuat kunci kriptografi...";
+            errorEl.innerText = "Membuat kunci autentikasi...";
             
             try {
                 const salt = generateSalt();
@@ -592,7 +630,7 @@
                 };
             } catch (err) {
                 errorEl.style.color = "var(--error-color)";
-                errorEl.innerText = "Terjadi kesalahan saat enkripsi.";
+                errorEl.innerText = "Terjadi kesalahan saat memproses enkripsi.";
                 console.error(err);
             }
         }
@@ -610,7 +648,7 @@
 
             req.onsuccess = async () => {
                 const authData = req.result;
-                if(!authData) return errorEl.innerText = "Data vault tidak ditemukan.";
+                if(!authData) return errorEl.innerText = "Data autentikasi tidak ditemukan.";
 
                 try {
                     errorEl.style.color = "var(--text-primary)";
@@ -629,13 +667,13 @@
                         document.getElementById('login-pwd').value = '';
                         errorEl.innerText = "";
                         errorEl.style.color = "var(--error-color)";
-                        resetInactivityTimer(); // Mulai timer
+                        resetInactivityTimer();
                         switchView('dashboard-view');
                         loadGallery(); 
                     }
                 } catch (e) {
                     errorEl.style.color = "var(--error-color)";
-                    errorEl.innerText = "Password salah atau data korup.";
+                    errorEl.innerText = "Password salah.";
                 }
             };
         }
@@ -644,21 +682,72 @@
             sessionKey = null; 
             clearTimeout(inactivityTimer);
             document.getElementById('gallery-container').innerHTML = ''; 
-            closeMediaViewer(); // Pastikan viewer tertutup saat dikunci
+            closeMediaViewer();
             switchView('login-view');
         }
 
-        // === FITUR BARU: Reset Total Vault ===
-        function resetTotalVault() {
-            if(confirm("PERINGATAN KRITIS!\n\nApakah Anda yakin ingin menghapus SELURUH FOTO, VIDEO, dan PASSWORD? Data akan musnah dan tidak dapat dipulihkan kembali.\n\nKlik OK untuk menghapus selamanya.")) {
-                const deleteReq = indexedDB.deleteDatabase(DB_NAME);
-                deleteReq.onsuccess = () => {
-                    alert("Seluruh data telah dihapus secara permanen. Halaman akan dimuat ulang.");
-                    window.location.reload();
+        // === FITUR RESET PASSWORD (TANPA MENGHAPUS FOTO & VIDEO) ===
+        function resetPasswordOnly() {
+            if(confirm("RESET PASSWORD MASTER?\n\nPassword lama Anda akan di-reset sehingga Anda dapat membuat password baru.\n\nFoto & Video yang sudah tersimpan TIDAK AKAN DIHAPUS dan tetap tersimpan aman di database browser.\n\nLanjutkan?")) {
+                const tx = db.transaction('config', 'readwrite');
+                tx.objectStore('config').delete('vault_auth');
+                
+                tx.oncomplete = () => {
+                    alert("Kunci autentikasi lama berhasil di-reset. Silakan buat Password Master baru Anda.");
+                    switchView('setup-view');
                 };
-                deleteReq.onerror = () => {
-                    alert("Gagal mereset database. Coba bersihkan cache browser Anda.");
-                }
+            }
+        }
+
+        // === FITUR UBAH PASSWORD DARI DASHBOARD ===
+        function openChangePwdModal() {
+            document.getElementById('change-pwd-modal').classList.remove('hidden');
+        }
+
+        function closeChangePwdModal() {
+            document.getElementById('change-pwd-modal').classList.add('hidden');
+            document.getElementById('new-pwd').value = '';
+            document.getElementById('new-pwd-confirm').value = '';
+            document.getElementById('change-pwd-error').innerText = '';
+        }
+
+        async function saveNewPasswordFromDashboard() {
+            const pwd = document.getElementById('new-pwd').value;
+            const confirm = document.getElementById('new-pwd-confirm').value;
+            const errorEl = document.getElementById('change-pwd-error');
+
+            if (pwd.length < 8) return errorEl.innerText = "Password minimal 8 karakter.";
+            if (pwd !== confirm) return errorEl.innerText = "Password baru tidak cocok.";
+
+            try {
+                const salt = generateSalt();
+                const validationBuffer = new TextEncoder().encode("VAULT_VALID");
+                
+                const key = await deriveKey(pwd, salt);
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encryptedValidation = await window.crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    validationBuffer
+                );
+
+                const tx = db.transaction('config', 'readwrite');
+                const store = tx.objectStore('config');
+                store.put({
+                    key: 'vault_auth',
+                    salt: salt,
+                    iv: iv,
+                    validation: encryptedValidation
+                });
+
+                tx.oncomplete = () => {
+                    sessionKey = key; // Update key sesi saat ini
+                    alert("Password Master berhasil diperbarui!");
+                    closeChangePwdModal();
+                };
+            } catch (err) {
+                errorEl.innerText = "Gagal memperbarui password.";
+                console.error(err);
             }
         }
 
@@ -721,8 +810,6 @@
 
             request.onsuccess = async () => {
                 const files = request.result;
-                
-                // Urutkan dari yang terbaru
                 files.sort((a, b) => b.timestamp - a.timestamp);
 
                 for (let file of files) {
@@ -741,7 +828,6 @@
 
                         const div = document.createElement('div');
                         div.className = 'gallery-item';
-                        
                         div.onclick = () => openMediaViewer(file.id);
                         
                         if (file.type.startsWith('image')) {
@@ -793,7 +879,7 @@
                     
                     currentMediaUrl = URL.createObjectURL(blob);
                     currentMediaName = file.name;
-                    currentFileId = file.id; // Simpan ID untuk fungsi Hapus
+                    currentFileId = file.id;
 
                     document.getElementById('modal-title').innerText = file.name;
                     const container = document.getElementById('media-content');
@@ -812,7 +898,7 @@
                     }
 
                     document.getElementById('media-modal').classList.remove('hidden');
-                    resetInactivityTimer(); // Reset timer saat buka media
+                    resetInactivityTimer();
 
                 } catch (e) {
                     alert("Gagal mendekripsi atau membuka media.");
@@ -846,11 +932,10 @@
             resetInactivityTimer();
         }
 
-        // === FITUR BARU: Hapus File ===
         function deleteCurrentMedia() {
             if(!currentFileId) return;
 
-            if(confirm("Apakah Anda yakin ingin menghapus file ini? Tindakan ini tidak dapat dibatalkan.")) {
+            if(confirm("Apakah Anda yakin ingin menghapus file ini?")) {
                 const tx = db.transaction('files', 'readwrite');
                 tx.objectStore('files').delete(currentFileId);
 
